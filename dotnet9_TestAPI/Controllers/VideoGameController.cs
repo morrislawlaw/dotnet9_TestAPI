@@ -24,6 +24,7 @@ namespace dotnet9_TestAPI.Controllers
         }
 
         [HttpGet("GetVideoGame/{id}")]
+        [Authorize]
         public ActionResult<VideoGame>GetVideoGameById(int id)
         {
             var game = videoGames.FirstOrDefault(g => g.Id == id);
@@ -35,6 +36,7 @@ namespace dotnet9_TestAPI.Controllers
 
         [HttpPost]
         [Route("AddVideoGame")]
+        [Authorize]
         public ActionResult<VideoGame>AddVideoGame(VideoGame newGame)
         {
             if (newGame is null)
@@ -47,6 +49,7 @@ namespace dotnet9_TestAPI.Controllers
         }
 
         [HttpDelete("DeleteVideoGame/{id}")]
+        [Authorize]
         public ActionResult DeleteVideoGame(int id)
         {
             var game = videoGames.FirstOrDefault(g => g.Id == id);
