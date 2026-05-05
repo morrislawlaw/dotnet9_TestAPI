@@ -1,5 +1,10 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using ACXBookingSystem.Entities;
+using Anderson_Road.Entities;
+using Anderson_Road.Models;
+using dotnet9_TestAPI.Models;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
@@ -13,10 +18,12 @@ namespace dotnet9_TestAPI.Controllers
     public class AuthController : ControllerBase
     {
         private readonly IConfiguration _configuration;
+        private readonly ACXBookingSystemDbContext _context;
 
-        public AuthController(IConfiguration configuration)
+        public AuthController(IConfiguration configuration, ACXBookingSystemDbContext context)
         {
             _configuration = configuration;
+            _context = context;
         }
 
         private static List<User> users = new List<User>
@@ -28,6 +35,41 @@ namespace dotnet9_TestAPI.Controllers
         {
             public string? token { get; set; }
             public int expiry { get; set; }
+        }
+
+        [HttpPost]
+        [Route("Loginv2")]
+        public async Task<ActionResult<ApiResponse<ResponseTokenParam>>> Loginv2([FromBody] UserDto dto)
+        {
+            if (dto == null)
+                return Ok(ApiResponse<object>.Error(-1, "Invalid input parameters."));
+
+            // Retrieving headers
+            var timestampHeader = Request.Headers["timestamp"].ToString();
+            var nonceHeader = Request.Headers["nonce"].ToString();
+
+            // Validate headers
+            if (string.IsNullOrEmpty(timestampHeader) || string.IsNullOrEmpty(nonceHeader))
+                return Ok(ApiResponse<object>.Error(-1, "Missing timestamp or nonce in headers."));
+
+            //find the password in DB based on the user_id
+            var password = await _context.Users.Where(v => v.UserName == dto.user_id).Select(v => v.Password.ToString()).FirstOrDefaultAsync();
+            if(password == null)
+                return Ok(ApiResponse<object>.Error(-1, "User does not exist."));
+
+            var dataToHash = dto.user_id + nonceHeader + timestampHeader;
+            string hash_pwd = HMACSHA256Encrypt(password, dataToHash, Encoding.UTF8);
+
+            if (hash_pwd != dto.password)
+                return Ok(ApiResponse<object>.Error(-1, "Invalid username or password."));
+
+            string token = CreateToken(dto);
+
+            ResponseTokenParam response = new ResponseTokenParam();
+            response.token = token;
+            response.expiry = 120; // 2 hours in minutes
+
+            return Ok(ApiResponse<ResponseTokenParam>.Success(response));
         }
 
         [HttpPost]
@@ -46,12 +88,12 @@ namespace dotnet9_TestAPI.Controllers
                 return BadRequest("Invalid input parameters.");
 
             //password in DB
-            var password = users.FirstOrDefault(u => u.Username == loginUser.Username)?.Password;
+            var password = users.FirstOrDefault(u => u.Username == loginUser.user_id)?.Password;
 
-            var dataToHash = loginUser.Username + nonceHeader + timestampHeader;
+            var dataToHash = loginUser.user_id + nonceHeader + timestampHeader;
             string hash_pwd = HMACSHA256Encrypt(password, dataToHash, Encoding.UTF8);
 
-            if (hash_pwd != loginUser.Password_hash)
+            if (hash_pwd != loginUser.password)
                 return Unauthorized("Invalid username or password.");
 
             string token = CreateToken(loginUser);
@@ -70,7 +112,7 @@ namespace dotnet9_TestAPI.Controllers
         {
             var claims = new List<Claim>
             {
-                new Claim(ClaimTypes.Name, user.Username),
+                new Claim(ClaimTypes.Name, user.user_id),
                 new Claim(ClaimTypes.Role, "Admin")
             };
 
@@ -102,7 +144,9 @@ namespace dotnet9_TestAPI.Controllers
         /// <param name="key"> 密钥 </param>
         /// <param name="encoding"> 字符编码 </param>
         /// <returns></returns>
-        public static string HMACSHA256Encrypt(string key, string input, Encoding encoding)
+        /// 
+        //public static string HMACSHA256Encrypt(string key, string input, Encoding encoding)
+        public static string HMACSHA256Encrypt(string input, string key, Encoding encoding)
         {
             Console.WriteLine("key: " + key);
             Console.WriteLine("input: " + input);

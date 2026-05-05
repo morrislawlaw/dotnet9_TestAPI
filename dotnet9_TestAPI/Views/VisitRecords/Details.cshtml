@@ -1,0 +1,271 @@
+﻿@using dotnet9_TestAPI.Entities.Anderson_Road
+@model VisitRecord
+
+@{
+    ViewData["Title"] = "Details";
+}
+
+<h1>Details</h1>
+
+<div>
+    <h4>VisitRecord</h4>
+    <hr />
+    <dl class="row">
+        <dt class = "col-sm-2">
+            @Html.DisplayNameFor(model => model.HomeId)
+        </dt>
+        <dd class = "col-sm-10">
+            @Html.DisplayFor(model => model.HomeId)
+        </dd>
+        <dt class = "col-sm-2">
+            @Html.DisplayNameFor(model => model.StaffId)
+        </dt>
+        <dd class = "col-sm-10">
+            @Html.DisplayFor(model => model.StaffId)
+        </dd>
+        <dt class = "col-sm-2">
+            @Html.DisplayNameFor(model => model.VisitorName)
+        </dt>
+        <dd class = "col-sm-10">
+            @Html.DisplayFor(model => model.VisitorName)
+        </dd>
+        <dt class = "col-sm-2">
+            @Html.DisplayNameFor(model => model.VisitorPhoto)
+        </dt>
+        <dd class = "col-sm-10">
+            @Html.DisplayFor(model => model.VisitorPhoto)
+        </dd>
+        <dt class = "col-sm-2">
+            @Html.DisplayNameFor(model => model.TelNo)
+        </dt>
+        <dd class = "col-sm-10">
+            @Html.DisplayFor(model => model.TelNo)
+        </dd>
+        <dt class = "col-sm-2">
+            @Html.DisplayNameFor(model => model.Company)
+        </dt>
+        <dd class = "col-sm-10">
+            @Html.DisplayFor(model => model.Company)
+        </dd>
+        <dt class = "col-sm-2">
+            @Html.DisplayNameFor(model => model.EmailAddress)
+        </dt>
+        <dd class = "col-sm-10">
+            @Html.DisplayFor(model => model.EmailAddress)
+        </dd>
+        <dt class = "col-sm-2">
+            @Html.DisplayNameFor(model => model.Purpose)
+        </dt>
+        <dd class = "col-sm-10">
+            @Html.DisplayFor(model => model.Purpose)
+        </dd>
+        <dt class = "col-sm-2">
+            @Html.DisplayNameFor(model => model.BookingDate)
+        </dt>
+        <dd class = "col-sm-10">
+            @Html.DisplayFor(model => model.BookingDate)
+        </dd>
+        <dt class = "col-sm-2">
+            @Html.DisplayNameFor(model => model.BookingFromTime)
+        </dt>
+        <dd class = "col-sm-10">
+            @Html.DisplayFor(model => model.BookingFromTime)
+        </dd>
+        <dt class = "col-sm-2">
+            @Html.DisplayNameFor(model => model.BookingToTime)
+        </dt>
+        <dd class = "col-sm-10">
+            @Html.DisplayFor(model => model.BookingToTime)
+        </dd>
+        <dt class = "col-sm-2">
+            @Html.DisplayNameFor(model => model.Interviewer)
+        </dt>
+        <dd class = "col-sm-10">
+            @Html.DisplayFor(model => model.Interviewer)
+        </dd>
+        <dt class = "col-sm-2">
+            @Html.DisplayNameFor(model => model.InterviewerDepartment)
+        </dt>
+        <dd class = "col-sm-10">
+            @Html.DisplayFor(model => model.InterviewerDepartment)
+        </dd>
+        <dt class = "col-sm-2">
+            @Html.DisplayNameFor(model => model.InterviewerTelNo)
+        </dt>
+        <dd class = "col-sm-10">
+            @Html.DisplayFor(model => model.InterviewerTelNo)
+        </dd>
+        <dt class = "col-sm-2">
+            @Html.DisplayNameFor(model => model.InterviewerEmailAddress)
+        </dt>
+        <dd class = "col-sm-10">
+            @Html.DisplayFor(model => model.InterviewerEmailAddress)
+        </dd>
+        <dt class = "col-sm-2">
+            @Html.DisplayNameFor(model => model.TenantCompany)
+        </dt>
+        <dd class = "col-sm-10">
+            @Html.DisplayFor(model => model.TenantCompany)
+        </dd>
+        <dt class = "col-sm-2">
+            @Html.DisplayNameFor(model => model.VisitEnterTime)
+        </dt>
+        <dd class = "col-sm-10">
+            @Html.DisplayFor(model => model.VisitEnterTime)
+        </dd>
+        <dt class = "col-sm-2">
+            @Html.DisplayNameFor(model => model.VisitLeaveTime)
+        </dt>
+        <dd class = "col-sm-10">
+            @Html.DisplayFor(model => model.VisitLeaveTime)
+        </dd>
+        <dt class = "col-sm-2">
+            @Html.DisplayNameFor(model => model.AddDt)
+        </dt>
+        <dd class = "col-sm-10">
+            @Html.DisplayFor(model => model.AddDt)
+        </dd>
+        <dt class = "col-sm-2">
+            @Html.DisplayNameFor(model => model.CardId)
+        </dt>
+        <dd class = "col-sm-10">
+            @Html.DisplayFor(model => model.CardId)
+        </dd>
+        <dt class = "col-sm-2">
+            @Html.DisplayNameFor(model => model.Room)
+        </dt>
+        <dd class = "col-sm-10">
+            @Html.DisplayFor(model => model.Room)
+        </dd>
+        <dt class = "col-sm-2">
+            @Html.DisplayNameFor(model => model.GuidId)
+        </dt>
+        <dd class = "col-sm-10">
+            @Html.DisplayFor(model => model.GuidId)
+        </dd>
+        <dt class = "col-sm-2">
+            @Html.DisplayNameFor(model => model.PassageType)
+        </dt>
+        <dd class = "col-sm-10">
+            @Html.DisplayFor(model => model.PassageType)
+        </dd>
+        <dt class = "col-sm-2">
+            @Html.DisplayNameFor(model => model.Reception)
+        </dt>
+        <dd class = "col-sm-10">
+            @Html.DisplayFor(model => model.Reception)
+        </dd>
+        <dt class = "col-sm-2">
+            @Html.DisplayNameFor(model => model.Sigunature)
+        </dt>
+        <dd class = "col-sm-10">
+            @Html.DisplayFor(model => model.Sigunature)
+        </dd>
+        <dt class = "col-sm-2">
+            @Html.DisplayNameFor(model => model.QrCode)
+        </dt>
+        <dd class = "col-sm-10">
+            @Html.DisplayFor(model => model.QrCode)
+        </dd>
+        <dt class = "col-sm-2">
+            @Html.DisplayNameFor(model => model.MeetingRoom)
+        </dt>
+        <dd class = "col-sm-10">
+            @Html.DisplayFor(model => model.MeetingRoom)
+        </dd>
+        <dt class = "col-sm-2">
+            @Html.DisplayNameFor(model => model.IsUpdate)
+        </dt>
+        <dd class = "col-sm-10">
+            @Html.DisplayFor(model => model.IsUpdate)
+        </dd>
+        <dt class = "col-sm-2">
+            @Html.DisplayNameFor(model => model.Status)
+        </dt>
+        <dd class = "col-sm-10">
+            @Html.DisplayFor(model => model.Status)
+        </dd>
+        <dt class = "col-sm-2">
+            @Html.DisplayNameFor(model => model.Floor)
+        </dt>
+        <dd class = "col-sm-10">
+            @Html.DisplayFor(model => model.Floor)
+        </dd>
+        <dt class = "col-sm-2">
+            @Html.DisplayNameFor(model => model.Tower)
+        </dt>
+        <dd class = "col-sm-10">
+            @Html.DisplayFor(model => model.Tower)
+        </dd>
+        <dt class = "col-sm-2">
+            @Html.DisplayNameFor(model => model.Unit)
+        </dt>
+        <dd class = "col-sm-10">
+            @Html.DisplayFor(model => model.Unit)
+        </dd>
+        <dt class = "col-sm-2">
+            @Html.DisplayNameFor(model => model.SyncIndex)
+        </dt>
+        <dd class = "col-sm-10">
+            @Html.DisplayFor(model => model.SyncIndex)
+        </dd>
+        <dt class = "col-sm-2">
+            @Html.DisplayNameFor(model => model.Gender)
+        </dt>
+        <dd class = "col-sm-10">
+            @Html.DisplayFor(model => model.Gender)
+        </dd>
+        <dt class = "col-sm-2">
+            @Html.DisplayNameFor(model => model.SystemVersion)
+        </dt>
+        <dd class = "col-sm-10">
+            @Html.DisplayFor(model => model.SystemVersion)
+        </dd>
+        <dt class = "col-sm-2">
+            @Html.DisplayNameFor(model => model.DestFloor)
+        </dt>
+        <dd class = "col-sm-10">
+            @Html.DisplayFor(model => model.DestFloor)
+        </dd>
+        <dt class = "col-sm-2">
+            @Html.DisplayNameFor(model => model.RoomDesc)
+        </dt>
+        <dd class = "col-sm-10">
+            @Html.DisplayFor(model => model.RoomDesc)
+        </dd>
+        <dt class = "col-sm-2">
+            @Html.DisplayNameFor(model => model.PersonalId)
+        </dt>
+        <dd class = "col-sm-10">
+            @Html.DisplayFor(model => model.PersonalId)
+        </dd>
+        <dt class = "col-sm-2">
+            @Html.DisplayNameFor(model => model.IsDeleteFrom8901X)
+        </dt>
+        <dd class = "col-sm-10">
+            @Html.DisplayFor(model => model.IsDeleteFrom8901X)
+        </dd>
+        <dt class = "col-sm-2">
+            @Html.DisplayNameFor(model => model.IsDeleteFrom8906)
+        </dt>
+        <dd class = "col-sm-10">
+            @Html.DisplayFor(model => model.IsDeleteFrom8906)
+        </dd>
+        <dt class = "col-sm-2">
+            @Html.DisplayNameFor(model => model.AllowedTimes)
+        </dt>
+        <dd class = "col-sm-10">
+            @Html.DisplayFor(model => model.AllowedTimes)
+        </dd>
+        <dt class = "col-sm-2">
+            @Html.DisplayNameFor(model => model.UsedTimes)
+        </dt>
+        <dd class = "col-sm-10">
+            @Html.DisplayFor(model => model.UsedTimes)
+        </dd>
+    </dl>
+</div>
+<div>
+    <a asp-action="Edit" asp-route-id="@Model?.Id">Edit</a> |
+    <a asp-action="Index">Back to List</a>
+</div>
