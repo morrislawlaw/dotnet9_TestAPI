@@ -17,27 +17,39 @@ namespace dotnet9_TestAPI.Services
         public async Task<BookingCreationResultDto?> CreateBookingAsync(
             int customerId, DateOnly checkIn, DateOnly checkOut, string roomIdsCsv, bool paymentSuccess = true)
         {
-            var result = await _context.Set<BookingCreationResultDto>()
-                .FromSqlInterpolated($"""
-                EXEC dbo.CreateBooking 
-                    @CustomerID = {customerId}, 
-                    @CheckInDate = {checkIn}, 
-                    @CheckOutDate = {checkOut}, 
-                    @RoomIDs = {roomIdsCsv}, 
-                    @PaymentSuccess = {paymentSuccess}
-                """)
-                .AsNoTracking()
-                .FirstOrDefaultAsync();
+            var results = await _context.Set<BookingCreationResultDto>()
+            .FromSqlInterpolated($"""
+            EXEC dbo.CreateBooking 
+                @CustomerID = {customerId}, 
+                @CheckInDate = {checkIn}, 
+                @CheckOutDate = {checkOut}, 
+                @RoomIDs = {roomIdsCsv}, 
+                @PaymentSuccess = {paymentSuccess}
+            """)
+            .AsNoTracking()
+            .ToListAsync();                    // This executes the proc
 
-            return result;
+            return results.FirstOrDefault();
         }
 
         // 2. CancelBooking
-        public async Task CancelBookingAsync(int bookingId, string? reason = null)
+        public async Task<OperationResultDto> CancelBookingAsync(int bookingId, string? reason = null)
         {
-            await _context.Database.ExecuteSqlInterpolatedAsync($"""
-            EXEC dbo.CancelBooking @BookingID = {bookingId}, @Reason = {reason}
-            """);
+            var results = await _context.Set<OperationResultDto>()
+            .FromSqlInterpolated($"""
+            EXEC dbo.CancelBooking 
+                @BookingID = {bookingId}, 
+                @Reason = {reason}
+            """)
+            .AsNoTracking()
+            .ToListAsync();
+
+            return results.FirstOrDefault()
+                   ?? new OperationResultDto
+                   {
+                       Success = false,
+                       Message = "Unknown error occurred."
+                   };
         }
 
         // 3. CheckRoomAvailability
@@ -57,19 +69,31 @@ namespace dotnet9_TestAPI.Services
         }
 
         // 4. CheckInBooking
-        public async Task CheckInBookingAsync(int bookingId)
+        public async Task<OperationResultDto> CheckInBookingAsync(int bookingId)
         {
-            await _context.Database.ExecuteSqlInterpolatedAsync($"""
+            var result = await _context.Set<OperationResultDto>().FromSqlInterpolated($"""
             EXEC dbo.CheckInBooking @BookingID = {bookingId}
-            """);
+            """).AsNoTracking().ToListAsync();
+
+            return result.FirstOrDefault() ?? new OperationResultDto
+            {
+                Success = false,
+                Message = "Unknown error occurred."
+            };
         }
 
         // 5. CheckOutBooking
-        public async Task CheckOutBookingAsync(int bookingId)
+        public async Task<OperationResultDto> CheckOutBookingAsync(int bookingId)
         {
-            await _context.Database.ExecuteSqlInterpolatedAsync($"""
+            var result = await _context.Set<OperationResultDto>().FromSqlInterpolated($"""
             EXEC dbo.CheckOutBooking @BookingID = {bookingId}
-            """);
+            """).AsNoTracking().ToListAsync();
+
+            return result.FirstOrDefault() ?? new OperationResultDto
+            {
+                Success = false,
+                Message = "Unknown error occurred."
+            };
         }
 
         // 6. UpdateBooking
@@ -90,24 +114,53 @@ namespace dotnet9_TestAPI.Services
                     @NewStatus = {newStatus}
                 """)
                 .AsNoTracking()
-                .FirstOrDefaultAsync();
+                .ToListAsync();
 
-            return result;
+            return result.FirstOrDefault();
         }
 
         // 7. GetBookingDetails
         public async Task<BookingDetailsDto?> GetBookingDetailsAsync(int bookingId)
         {
-            return await _context.Set<BookingDetailsDto>()
+            var result = await _context.Set<BookingDetailsDto>()
                 .FromSqlInterpolated($"""
                 EXEC dbo.GetBookingDetails @BookingID = {bookingId}
                 """)
                 .AsNoTracking()
-                .FirstOrDefaultAsync();
+                .ToListAsync();
+
+            return result.FirstOrDefault();
         }
 
         // Bonus: Use the View directly (no stored proc needed)
         public IQueryable<BookingReportDto> GetBookingReport()
-            => _context.BookingReports.AsNoTracking();
+            => _context.Set<BookingReportDto>().AsNoTracking();   // Use Set<T>() instead
+
+
+        public async Task<List<BookingReportDto>> GetBookingReportListAsync(string? statusFilter = null, DateOnly? fromDate = null, DateOnly? toDate = null)
+        {
+            var query = GetBookingReport();
+
+            if (!string.IsNullOrEmpty(statusFilter))
+                query = query.Where(r => r.Status == statusFilter);
+
+            if (fromDate.HasValue)
+                query = query.Where(r => r.CheckInDate >= fromDate.Value);
+
+            if (toDate.HasValue)
+                query = query.Where(r => r.CheckInDate <= toDate.Value);
+
+            return await query
+                .OrderByDescending(r => r.CheckInDate)
+                .ThenBy(r => r.BookingID)
+                .ToListAsync();
+        }
+
+
+        // Helper method
+        public async Task<bool> BookingIDExists(int id)
+        {
+            return await _context.Bookings.AnyAsync(e => e.BookingId == id);
+        }
     }
 }

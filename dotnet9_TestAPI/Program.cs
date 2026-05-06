@@ -1,6 +1,7 @@
 using ACXBookingSystem.Entities;
 using Anderson_Road.Entities;
 using dotnet9_TestAPI.Services;
+using HotelBookingSystem.Entities;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.EntityFrameworkCore;
@@ -8,6 +9,8 @@ using Microsoft.IdentityModel.Tokens;
 using Scalar.AspNetCore;
 using System.Security.AccessControl;
 using System.Text;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -19,27 +22,39 @@ builder.Services.AddDbContext<ACXBookingSystemDbContext>(options =>
     options.UseSqlServer(
         builder.Configuration.GetConnectionString("ACXBookingSystemConnection")
      ));
-builder.Services.AddDbContext<ACXBookingSystemDbContext>(options =>
+builder.Services.AddDbContext<HotelBookingSystemDbContext>(options =>
     options.UseSqlServer(
-        builder.Configuration.GetConnectionString("ACXBookingSystemConnection")
+        builder.Configuration.GetConnectionString("HotelBookingSystemConnection")
      ));
+
+// ===== REGISTER YOUR SERVICE =====
+builder.Services.AddScoped<dotnet9_TestAPI.Services.BookingService>();
 
 // Enable camelCase for JSON serialization (important!)
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
     {
-        options.JsonSerializerOptions.PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase;
-        options.JsonSerializerOptions.DictionaryKeyPolicy = System.Text.Json.JsonNamingPolicy.CamelCase;
+        //options.JsonSerializerOptions.PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase;
+        //options.JsonSerializerOptions.DictionaryKeyPolicy = System.Text.Json.JsonNamingPolicy.CamelCase;
+        //options.JsonSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
+        //options.JsonSerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull; // Helpful
+        //// Add our custom DateTime converter
+        //options.JsonSerializerOptions.Converters.Add(new Anderson_Road.Models.CustomDateTimeConverter());
+
+        options.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
+        options.JsonSerializerOptions.DictionaryKeyPolicy = JsonNamingPolicy.CamelCase;
+
+        // These two lines help with null handling
+        options.JsonSerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
+        options.JsonSerializerOptions.NumberHandling = System.Text.Json.Serialization.JsonNumberHandling.AllowReadingFromString;
+
         options.JsonSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
-        // Add our custom DateTime converter
         options.JsonSerializerOptions.Converters.Add(new Anderson_Road.Models.CustomDateTimeConverter());
     });
 
 // Add services to the container.
-
-builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddScoped<BookingService>();
+
 
 // 1. Register the OpenAPI document with a custom name ("v2")
 builder.Services.AddOpenApi("v2", options =>
@@ -54,11 +69,6 @@ builder.Services.AddOpenApi("v2", options =>
         return Task.CompletedTask;
     });
 });
-
-//builder.Services.AddOpenApi(options =>
-//{
-//    options.AddDocumentTransformer<BearerSecuritySchemeTransformer>();
-//});
 
 // 1. Configure JWT Authentication
 var jwtSettings = builder.Configuration.GetSection("Jwt");

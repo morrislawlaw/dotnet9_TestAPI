@@ -16,6 +16,7 @@ public partial class HotelBookingSystemDbContext : DbContext
     {
     }
 
+    //Entity Set
     public virtual DbSet<Booking> Bookings { get; set; }
 
     public virtual DbSet<BookingRoom> BookingRooms { get; set; }
@@ -28,6 +29,7 @@ public partial class HotelBookingSystemDbContext : DbContext
 
     public virtual DbSet<RoomType> RoomTypes { get; set; }
 
+    //View Set
     public virtual DbSet<VwBookingReport> VwBookingReports { get; set; }
 
     public virtual DbSet<VwCustomerBooking> VwCustomerBookings { get; set; }
@@ -44,6 +46,32 @@ public partial class HotelBookingSystemDbContext : DbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        base.OnModelCreating(modelBuilder);
+
+        //// Map the VIEW as keyless entity
+        //modelBuilder.Entity<BookingReportDto>()
+        //    .HasNoKey()
+        //    .ToView("vw_BookingReport");
+
+        // === Keyless entities for Stored Procedures ===
+        modelBuilder.Entity<RoomAvailabilityDto>().HasNoKey();
+        modelBuilder.Entity<BookingDetailsDto>().HasNoKey();
+        modelBuilder.Entity<BookingCreationResultDto>().HasNoKey();
+        modelBuilder.Entity<BookingUpdateResultDto>().HasNoKey();
+        modelBuilder.Entity<OperationResultDto>().HasNoKey();
+        modelBuilder.Entity<BookingReportDto>()
+            .HasNoKey()
+            .ToView("vw_BookingReport", "dbo");   // ← This is the important line
+
+        // View mappings (already good)
+        modelBuilder.Entity<VwBookingReport>()
+            .HasNoKey()
+            .ToView("vw_BookingReport");
+
+        modelBuilder.Entity<VwCustomerBooking>()
+            .HasNoKey()
+            .ToView("vw_CustomerBookings");
+
         modelBuilder.Entity<Booking>(entity =>
         {
             entity.HasIndex(e => e.CheckInDate, "IX_Bookings_CheckInDate");
