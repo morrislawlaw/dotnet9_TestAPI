@@ -2,6 +2,8 @@
 using Anderson_Road.Entities;
 using Anderson_Road.Models;
 using dotnet9_TestAPI.Models;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -106,6 +108,42 @@ namespace dotnet9_TestAPI.Controllers
             ret.Success(response);
 
             return Ok(ret);
+        }
+
+        // ==================== NEW: GOOGLE LOGIN ====================
+
+        [HttpGet("google")]
+        public IActionResult GoogleLogin()
+        {
+            var properties = new AuthenticationProperties
+            {
+                RedirectUri = Url.Action("GoogleCallback", "Auth")
+            };
+            return Challenge(properties, GoogleDefaults.AuthenticationScheme);
+        }
+
+        [HttpGet("google-callback")]
+        public async Task<IActionResult> GoogleCallback()
+        {
+            var result = await HttpContext.AuthenticateAsync(GoogleDefaults.AuthenticationScheme);
+
+            if (result?.Succeeded != true || result.Principal == null)
+                return BadRequest(new { message = "Google authentication failed." });
+
+            var email = result.Principal.FindFirst(ClaimTypes.Email)?.Value;
+            var name = result.Principal.FindFirst(ClaimTypes.Name)?.Value;
+            var picture = result.Principal.FindFirst("picture")?.Value;
+
+            if (string.IsNullOrEmpty(email))
+                return BadRequest(new { message = "Failed to get email from Google." });
+
+            // Reuse your existing CreateToken method
+            var userDto = new UserDto { user_id = email };
+
+            string token = CreateToken(userDto);
+
+            // Redirect back to frontend with token in query string
+            return Redirect($"https://488865.xyz/?token={token}");
         }
 
         private string CreateToken(UserDto user)
