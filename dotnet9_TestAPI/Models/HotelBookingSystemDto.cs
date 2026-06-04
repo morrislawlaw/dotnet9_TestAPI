@@ -96,7 +96,7 @@
 
     public class CreateBookingInputDto
     {
-        public int CustomerID { get; set; }
+        //public int CustomerID { get; set; }
         public DateOnly CheckInDate { get; set; }
         public DateOnly CheckOutDate { get; set; }
         public string RoomIDs { get; set; } = string.Empty;   // comma separated e.g. "1,5,12"

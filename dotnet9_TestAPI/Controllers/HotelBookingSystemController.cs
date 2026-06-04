@@ -2,8 +2,11 @@
 using dotnet9_TestAPI.Models;
 using dotnet9_TestAPI.Services;
 using HotelBookingSystem.Entities;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
+using System.Security.Claims;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
@@ -15,17 +18,20 @@ namespace dotnet9_TestAPI.Controllers
     public class HotelBookingSystemController : ControllerBase
     {
         private readonly BookingService _bookingService;
+        private readonly HotelBookingSystemDbContext _context; // For direct EF Core table access
 
-        public HotelBookingSystemController(BookingService bookingService)
+        public HotelBookingSystemController(HotelBookingSystemDbContext context, BookingService bookingService)
         {
+            _context = context;
             _bookingService = bookingService;
         }
 
         // Post: api/HotelBookingSystem/CreateBooking
+        [Authorize]
         [HttpPost("CreateBooking")]
         public async Task<ActionResult<BookingCreationResultDto>> CreateBooking([FromBody] CreateBookingInputDto dto)   // ← Add ? here too
         {
-            if (dto == null)
+            if (dto == null || string.IsNullOrEmpty(dto.RoomIDs))
                 return BadRequest(ApiResponse<object>.Error(-1, "Request body is required."));
 
             if (dto.CheckInDate == default || dto.CheckOutDate == default)
@@ -34,27 +40,62 @@ namespace dotnet9_TestAPI.Controllers
             if (dto.CheckOutDate <= dto.CheckInDate)
                 return BadRequest(ApiResponse<object>.Error(-1, "Check-out date must be after check-in date."));
 
-            if (dto.CustomerID <= 0)
-                return BadRequest(ApiResponse<object>.Error(-1, "Valid CustomerID is required."));
+            //if (dto.CustomerID <= 0)
+            //    return BadRequest(ApiResponse<object>.Error(-1, "Valid CustomerID is required."));
 
             try
             {
-                var data = await _bookingService.CreateBookingAsync(
-                    dto.CustomerID,
+                // 1. Extract verified Email from token claims payload securely
+                var userEmail = User.FindFirst(System.Security.Claims.ClaimTypes.Name)?.Value;
+                if (string.IsNullOrEmpty(userEmail))
+                {
+                    return Unauthorized(new { message = "Expired session token identifier context." });
+                }
+
+                // 2. Fetch the corresponding CustomerID integer from your Customers profile table[cite: 27]
+                var customer = await _context.Customers.FirstOrDefaultAsync(c => c.Email == userEmail);
+                if (customer == null)
+                {
+                    return BadRequest(new { message = "No matching customer profile found for this account." });
+                }
+
+                // 4. Delegate stored procedure execution payload directly to your clean Service tier!
+                var bookingResult = await _bookingService.CreateBookingAsync(
+                    customer.CustomerId,
                     dto.CheckInDate,
                     dto.CheckOutDate,
                     dto.RoomIDs,
-                    true);
+                    true
+                    //dto.PaymentSuccess
+                );
 
-                return Ok(ApiResponse<BookingCreationResultDto>.Success(data));
+                if (bookingResult == null)
+                {
+                    return StatusCode(500, new { message = "Failed to compile reservation records from the database instance." });
+                }
+
+                return Ok(new
+                {
+                    success = true,
+                    statusCode = 200,
+                    message = "Booking created successfully.",
+                    data = bookingResult
+                });              
             }
             catch (Exception ex)
             {
-                return StatusCode(500, ApiResponse<object>.Error(-1, "BookingCreationResult Error: " + ex.Message));
+                return StatusCode(500, new
+                {
+                    success = false,
+                    statusCode = 500,
+                    message = "Transaction parsing failure.",
+                    errorDetails = ex.Message
+                });
             }
         }
 
         // Post: api/HotelBookingSystem/UpdateBooking
+        [Authorize]
         [HttpPost("UpdateBooking")]
         public async Task<ActionResult<BookingDetailsDto>> UpdateBooking([FromBody] UpdateBookingInputDto dto)   // ← Add ? here too
         {
@@ -74,6 +115,32 @@ namespace dotnet9_TestAPI.Controllers
 
             try
             {
+                // Step A: Extract verified identity email context from token
+                var userEmail = User.FindFirst(ClaimTypes.Name)?.Value;
+                if (string.IsNullOrEmpty(userEmail))
+                {
+                    return Unauthorized(ApiResponse<object>.Error(-1, "Invalid or expired session token."));
+                }
+
+                // Step B: Fetch the target booking header, including customer profile context
+                var booking = await _context.Bookings
+                    .Include(b => b.Customer)
+                    .FirstOrDefaultAsync(b => b.BookingId == dto.BookingID);
+
+                if (booking == null)
+                {
+                    
+                    return NotFound(ApiResponse<object>.Error(-1, "Booking record not found."));
+                }
+
+                // Step C: Security Ownership Validation Check
+                if (booking.Customer?.Email != userEmail)
+                {
+                    
+                    return BadRequest(ApiResponse<object>.Error(-1, "Access denied. You do not own this booking record."));
+                }
+
+                // Step E: Pass sanitized values to the service tier execution loop
                 var data = await _bookingService.UpdateBookingAsync(
                     dto.BookingID,
                     dto.NewCheckInDate,
@@ -90,6 +157,7 @@ namespace dotnet9_TestAPI.Controllers
         }
 
         // Post: api/HotelBookingSystem/CancelBooking
+        [Authorize]
         [HttpPost("CancelBooking")]
         public async Task<ActionResult<OperationResultDto>> CancelBooking([FromBody] CancelBookingInputDto dto)   // ← Add ? here too
         {
@@ -102,6 +170,27 @@ namespace dotnet9_TestAPI.Controllers
 
             try
             {
+                var userEmail = User.FindFirst(ClaimTypes.Name)?.Value;
+                if (string.IsNullOrEmpty(userEmail))
+                {                 
+                    return Unauthorized(ApiResponse<object>.Error(-1, "Invalid session token."));
+                }
+
+                var booking = await _context.Bookings
+                    .Include(b => b.Customer)
+                    .FirstOrDefaultAsync(b => b.BookingId == dto.BookingID);
+
+                if (booking == null)
+                {
+                    return NotFound(ApiResponse<object>.Error(-1, "Booking not found."));
+                }
+
+                // Prevent cross-user cancellation exploits
+                if (booking.Customer?.Email != userEmail)
+                {             
+                    return BadRequest(ApiResponse<object>.Error(-1, "Access denied. You are not authorized to cancel this booking."));
+                }
+
                 var data = await _bookingService.CancelBookingAsync(
                     dto.BookingID,
                     dto.Reason
@@ -110,7 +199,7 @@ namespace dotnet9_TestAPI.Controllers
                 if(data.Success)
                     return Ok(ApiResponse<OperationResultDto>.Success(data));
                 else
-                    return Ok(ApiResponse<OperationResultDto>.Success(data));
+                    return Ok(ApiResponse<object>.Error(-1, "Cancel Booking Failed"));
             }
             catch (Exception ex)
             {
@@ -119,6 +208,7 @@ namespace dotnet9_TestAPI.Controllers
         }
 
         // Post: api/HotelBookingSystem/CheckInBooking
+        [Authorize]
         [HttpPost("CheckInBooking")]
         public async Task<ActionResult<OperationResultDto>> CheckInBooking([FromBody] CheckInOutInputDto dto)   // ← Add ? here too
         {
@@ -138,7 +228,7 @@ namespace dotnet9_TestAPI.Controllers
                 if (data.Success)
                     return Ok(ApiResponse<OperationResultDto>.Success(data));
                 else
-                    return Ok(ApiResponse<OperationResultDto>.Success(data));
+                    return Ok(ApiResponse<object>.Error(-1, "Check In Failed"));
             }
             catch (Exception ex)
             {
@@ -147,6 +237,7 @@ namespace dotnet9_TestAPI.Controllers
         }
 
         // Post: api/HotelBookingSystem/CheckOutBooking
+        [Authorize]
         [HttpPost("CheckOutBooking")]
         public async Task<ActionResult<OperationResultDto>> CheckOutBooking([FromBody] CheckInOutInputDto dto)   // ← Add ? here too
         {
@@ -166,7 +257,7 @@ namespace dotnet9_TestAPI.Controllers
                 if (data.Success)
                     return Ok(ApiResponse<OperationResultDto>.Success(data));
                 else
-                    return Ok(ApiResponse<OperationResultDto>.Success(data));
+                    return Ok(ApiResponse<object>.Error(-1, "Check out Failed"));
             }
             catch (Exception ex)
             {
@@ -175,6 +266,7 @@ namespace dotnet9_TestAPI.Controllers
         }
 
         // Post: api/HotelBookingSystem/CheckRoomAvailability
+        [AllowAnonymous]
         [HttpPost("CheckRoomAvailability")]
         public async Task<ActionResult<List<RoomAvailabilityDto>>> CheckRoomAvailability([FromBody] RoomAvailabilityInputDto? dto)   // ← Add ? here too
         {
@@ -210,6 +302,7 @@ namespace dotnet9_TestAPI.Controllers
         }
 
         // Post: api/HotelBookingSystem/GetBookingDetail
+        [Authorize]
         [HttpPost("GetBookingDetail")]
         public async Task<ActionResult<BookingDetailsDto>> GetBookingDetail([FromBody] CheckInOutInputDto dto)   // ← Add ? here too
         {
@@ -222,6 +315,27 @@ namespace dotnet9_TestAPI.Controllers
 
             try
             {
+                var userEmail = User.FindFirst(ClaimTypes.Name)?.Value;
+                if (string.IsNullOrEmpty(userEmail))
+                {
+                    return Unauthorized(ApiResponse<object>.Error(-1, "Invalid session token."));
+                }
+
+                var booking = await _context.Bookings
+                    .Include(b => b.Customer)
+                    .FirstOrDefaultAsync(b => b.BookingId == dto.BookingID);
+
+                if (booking == null)
+                {
+                    return NotFound(ApiResponse<object>.Error(-1, "Booking record could not be found."));
+                }
+
+                // Ensure users can only look up details for their own bookings
+                if (booking.Customer?.Email != userEmail)
+                {
+                    return BadRequest(ApiResponse<object>.Error(-1, "Access denied. You do not have permission to view this booking file."));
+                }
+
                 var data = await _bookingService.GetBookingDetailsAsync(
                     dto.BookingID
                     );
@@ -234,6 +348,7 @@ namespace dotnet9_TestAPI.Controllers
             }
         }
 
+        [Authorize]
         [HttpPost("GetBookingReport")]   // You can change to [HttpGet] if you prefer
         public async Task<ActionResult<List<BookingReportDto>>> GetBookingReport([FromBody] BookingReportFilterDto? filter = null)
         {
@@ -242,6 +357,12 @@ namespace dotnet9_TestAPI.Controllers
 
             try
             {
+                var userEmail = User.FindFirst(ClaimTypes.Name)?.Value;
+                if (string.IsNullOrEmpty(userEmail))
+                {
+                    return Unauthorized(ApiResponse<object>.Error(-1, "Invalid session token."));
+                }
+
                 var data = await _bookingService.GetBookingReportListAsync(
                     statusFilter: filter.Status,
                     fromDate: filter.FromDate,
@@ -252,7 +373,10 @@ namespace dotnet9_TestAPI.Controllers
                     return Ok(ApiResponse<List<BookingReportDto>>.Success(new List<BookingReportDto>(),
                         "No booking records found."));
 
-                return Ok(ApiResponse<List<BookingReportDto>>.Success(data,
+                // Filter the view down specifically to the logged-in user email
+                var userSpecificReport = data.Where(b => b.Email == userEmail).ToList();
+
+                return Ok(ApiResponse<List<BookingReportDto>>.Success(userSpecificReport,
                     $"Retrieved {data.Count} booking record(s)."));
             }
             catch (Exception ex)

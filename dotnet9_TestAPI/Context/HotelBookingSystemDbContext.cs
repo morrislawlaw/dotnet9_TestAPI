@@ -1,4 +1,5 @@
-﻿using dotnet9_TestAPI.Models;
+﻿using dotnet9_TestAPI.Entities.HotelBookingSystem;
+using dotnet9_TestAPI.Models;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
@@ -28,17 +29,21 @@ public partial class HotelBookingSystemDbContext : DbContext
     public virtual DbSet<Room> Rooms { get; set; }
 
     public virtual DbSet<RoomType> RoomTypes { get; set; }
+    public virtual DbSet<User> Users { get; set; }
+    public virtual DbSet<UserLogin> UserLogins { get; set; }
 
     //View Set
     public virtual DbSet<VwBookingReport> VwBookingReports { get; set; }
 
     public virtual DbSet<VwCustomerBooking> VwCustomerBookings { get; set; }
 
+
     // Keyless entities for stored procedures + view
     public DbSet<RoomAvailabilityDto> RoomAvailabilityResults { get; set; }
     public DbSet<BookingDetailsDto> BookingDetailsResults { get; set; }
     public DbSet<BookingReportDto> BookingReports { get; set; }   // for the VIEW
     public DbSet<BookingCreationResultDto> BookingCreationResults { get; set; }
+
 
     //    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     //#warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see https://go.microsoft.com/fwlink/?LinkId=723263.
@@ -207,6 +212,22 @@ public partial class HotelBookingSystemDbContext : DbContext
             entity.Property(e => e.CustomerId).HasColumnName("CustomerID");
             entity.Property(e => e.FirstName).HasMaxLength(50);
             entity.Property(e => e.HotelName).HasMaxLength(100);
+        });
+
+        // Configure Indexes & Relationships fluently
+        modelBuilder.Entity<User>(entity =>
+        {
+            entity.ToTable("Users");
+            entity.HasIndex(e => e.Email).IsUnique(); // Speeds up user lookups
+        });
+
+        modelBuilder.Entity<UserLogin>(entity =>
+        {
+            entity.ToTable("UserLogins");
+            entity.HasOne(d => d.User)
+                  .WithMany(p => p.UserLogins)
+                  .HasForeignKey(d => d.UserId)
+                  .OnDelete(DeleteBehavior.Cascade); // If user is deleted, wipe social logins
         });
 
         OnModelCreatingPartial(modelBuilder);

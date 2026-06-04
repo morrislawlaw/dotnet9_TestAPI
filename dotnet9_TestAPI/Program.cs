@@ -1,8 +1,10 @@
+ï»¿using ACXBookingSystem.Entities;
 using Anderson_Road.Entities;
-using ACXBookingSystem.Entities;
-using HotelBookingSystem.Entities;
 using dotnet9_TestAPI.Services;
+using HotelBookingSystem.Entities;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authentication.OAuth;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Scalar.AspNetCore;
@@ -72,12 +74,37 @@ builder.Services.AddAuthentication(options =>
 {
     options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
     options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+
+    options.DefaultSignInScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+})
+.AddCookie(options =>
+{
+    options.Cookie.SameSite = SameSiteMode.None; // Allows the cookie to survive cross-domain redirects
+    options.Cookie.SecurePolicy = CookieSecurePolicy.Always; // Required when SameSite = None
 })
 // Google Authentication (NEW)
 .AddGoogle(googleOptions =>
 {
     googleOptions.ClientId = builder.Configuration["Authentication:Google:ClientId"]!;
     googleOptions.ClientSecret = builder.Configuration["Authentication:Google:ClientSecret"]!;
+
+    // CRITICAL FIX: Force the middleware to use your exact callback path instead of /signin-google
+    googleOptions.CallbackPath = "/api/auth/google-callback";
+
+    // ADD THIS EVENT HOOK: Hand off control directly to your custom controller method!
+    googleOptions.Events = new OAuthEvents
+    {
+        OnTicketReceived = context =>
+        {
+            // Bounces the user browser right into your token generation logic
+            context.ReturnUri = "/api/auth/google-success";
+            return Task.CompletedTask;
+        }
+    };
+
+    // THE CRITICAL CORRELATION FIX:
+    googleOptions.CorrelationCookie.SameSite = SameSiteMode.None;
+    googleOptions.CorrelationCookie.SecurePolicy = CookieSecurePolicy.Always;
 })
 .AddJwtBearer(options =>
 {
@@ -115,7 +142,7 @@ app.UseHttpsRedirection();
 app.UseRouting();
 app.UseCors("VueFrontendPolicy");
 
-// ¡ö¡ö¡ö VERY IMPORTANT: These two lines must be in this order
+// â†â†â† VERY IMPORTANT: These two lines must be in this order
 app.UseAuthentication();
 app.UseAuthorization();
 
