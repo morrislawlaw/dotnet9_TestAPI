@@ -1,8 +1,27 @@
 ﻿namespace dotnet9_TestAPI.Models
 {
+    public class HotelSearchInputDto
+    {
+        public string CheckInDate { get; set; } = string.Empty;
+        public string CheckOutDate { get; set; } = string.Empty;
+        public int Guests { get; set; } = 2; // Default baseline value
+    }
+
+    public class AvailableHotelQueryResultDto
+    {
+        public int HotelID { get; set; }
+        public string HotelName { get; set; } = string.Empty;
+        public string City { get; set; } = string.Empty;
+        public string Country { get; set; } = string.Empty;
+        public byte? StarRating { get; set; }
+        public string? Address { get; set; }
+        public decimal StartingPricePerNight { get; set; }
+    }
+
     // Dtos/RoomAvailabilityDto.cs
     public class RoomAvailabilityDto
     {
+        public int HotelID { get; set; }
         public string HotelName { get; set; } = string.Empty;
         public int RoomID { get; set; }
         public string RoomNumber { get; set; } = string.Empty;

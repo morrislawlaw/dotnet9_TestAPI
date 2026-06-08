@@ -1,5 +1,6 @@
 ﻿using dotnet9_TestAPI.Models;
 using HotelBookingSystem.Entities;
+using Humanizer;
 using Microsoft.EntityFrameworkCore;
 
 namespace dotnet9_TestAPI.Services
@@ -67,6 +68,22 @@ namespace dotnet9_TestAPI.Services
                 .AsNoTracking()
                 .ToListAsync();
         }
+
+        // 3.5 GetAvailableHotelsList
+        public async Task<List<AvailableHotelQueryResultDto>> GetAvailableHotelsListAsync(
+            DateOnly checkIn, DateOnly checkOut, int guests)
+        {
+            return await _context.Set<AvailableHotelQueryResultDto>()
+            .FromSqlInterpolated($@"
+                EXEC [dbo].[GetAvailableHotels] 
+                    @CheckInDate = {checkIn}, 
+                    @CheckOutDate = {checkOut}, 
+                    @MaxGuests = {guests}"
+            )
+            .AsNoTracking()
+            .ToListAsync();
+        }
+
 
         // 4. CheckInBooking
         public async Task<OperationResultDto> CheckInBookingAsync(int bookingId)

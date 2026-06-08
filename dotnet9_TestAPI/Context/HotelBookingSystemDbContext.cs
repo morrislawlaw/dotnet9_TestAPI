@@ -43,6 +43,7 @@ public partial class HotelBookingSystemDbContext : DbContext
     public DbSet<BookingDetailsDto> BookingDetailsResults { get; set; }
     public DbSet<BookingReportDto> BookingReports { get; set; }   // for the VIEW
     public DbSet<BookingCreationResultDto> BookingCreationResults { get; set; }
+    public DbSet<AvailableHotelQueryResultDto> AvailableHotelQueryResults { get; set; }
 
 
     //    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
@@ -64,6 +65,8 @@ public partial class HotelBookingSystemDbContext : DbContext
         modelBuilder.Entity<BookingCreationResultDto>().HasNoKey();
         modelBuilder.Entity<BookingUpdateResultDto>().HasNoKey();
         modelBuilder.Entity<OperationResultDto>().HasNoKey();
+        modelBuilder.Entity<AvailableHotelQueryResultDto>().HasNoKey();
+
         modelBuilder.Entity<BookingReportDto>()
             .HasNoKey()
             .ToView("vw_BookingReport", "dbo");   // ← This is the important line

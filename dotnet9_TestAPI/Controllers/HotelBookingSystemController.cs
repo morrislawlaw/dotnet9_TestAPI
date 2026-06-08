@@ -301,6 +301,33 @@ namespace dotnet9_TestAPI.Controllers
             }
         }
 
+        [AllowAnonymous]
+        [HttpPost("GetAvailableHotelsList")]
+        public async Task<IActionResult> GetAvailableHotelsList([FromBody] HotelSearchInputDto dto)
+        {
+            if (dto == null || string.IsNullOrEmpty(dto.CheckInDate) || string.IsNullOrEmpty(dto.CheckOutDate))
+            {
+                return BadRequest(new { message = "Check-in and check-out dates are required query parameters." });
+            }
+
+            try
+            {
+                DateOnly checkIn = DateOnly.Parse(dto.CheckInDate);
+                DateOnly checkOut = DateOnly.Parse(dto.CheckOutDate);
+
+                var data = await _bookingService.GetAvailableHotelsListAsync(
+                    checkIn,
+                    checkOut,
+                    dto.Guests);
+
+                return Ok(ApiResponse<List<AvailableHotelQueryResultDto>>.Success(data));
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "Hotel aggregation routines failed.", errorDetails = ex.Message });
+            }
+        }
+
         // Post: api/HotelBookingSystem/GetBookingDetail
         [Authorize]
         [HttpPost("GetBookingDetail")]

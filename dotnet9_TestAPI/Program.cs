@@ -26,6 +26,7 @@ builder.Services.AddDbContext<HotelBookingSystemDbContext>(options =>
 
 // ===== Services =====
 builder.Services.AddScoped<BookingService>();
+builder.Services.AddHttpClient<EmailService>();
 
 // ===== CORS Policy (Production Ready) =====
 builder.Services.AddCors(options =>
