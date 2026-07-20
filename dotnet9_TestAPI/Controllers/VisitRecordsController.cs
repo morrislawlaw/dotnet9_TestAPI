@@ -27,7 +27,7 @@ namespace dotnet9_TestAPI.Controllers
             _context = context;
         }
 
-        // GET: api/VisitRecord/count  → Get Visitor Record count
+        //GET: api/VisitRecord/count  → Get Visitor Record count
         [HttpGet("count")]
         public async Task<ActionResult<ResponseVisitorRecordCount>> GetAllVisitRecordsCount()
         {
@@ -68,7 +68,7 @@ namespace dotnet9_TestAPI.Controllers
         }
 
 
-        // POST: api/VisitRecords/Create  → Create new visit record
+        //// POST: api/VisitRecords/Create  → Create new visit record
         [HttpPost("Create")]
         public async Task<ActionResult<ApiResponse<VisitRecordCreateDto>>> Create([FromBody] VisitRecordCreateDto dto)
         {
@@ -128,7 +128,7 @@ namespace dotnet9_TestAPI.Controllers
             return Ok(ApiResponse<ResponseVisitorRecordCreate>.Success(response));
         }
 
-        // POST: api/VisitRecords/Create  → Create new visit record
+        //POST: api/VisitRecords/Create  → Create new visit record
         [HttpPost("BulkCreate")]
         public async Task<ActionResult<ApiResponse<VisitRecordCreateDto>>> BulkCreate([FromBody] List<VisitRecordCreateDto> dtos)
         {
@@ -245,36 +245,36 @@ namespace dotnet9_TestAPI.Controllers
         }
 
         //Classic way
-        //// POST: api/VisitRecords/Update → Update existing record
-        //[HttpPost("Update")]
-        //public async Task<ActionResult<ApiResponse<VisitRecordCreateDto>>> UpdateVisitRecord([FromBody] VisitRecordEditDto dto)
-        //{
-        //    bool exists = await VisitRecordExists(dto.Booking_id);
-        //    if (!exists)
-        //        return Ok(ApiResponse<object>.Error(-1, "Record does not exist."));
+        ////// POST: api/VisitRecords/Update → Update existing record
+        ////[HttpPost("Update")]
+        ////public async Task<ActionResult<ApiResponse<VisitRecordCreateDto>>> UpdateVisitRecord([FromBody] VisitRecordEditDto dto)
+        ////{
+        ////    bool exists = await VisitRecordExists(dto.Booking_id);
+        ////    if (!exists)
+        ////        return Ok(ApiResponse<object>.Error(-1, "Record does not exist."));
 
-        //    var record = await _context.VisitRecords.Where(v => v.HomeId == dto.Booking_id).FirstOrDefaultAsync();
-        //    if (record != null)
-        //    {
-        //        record.Interviewer = dto.ResidentCardId ?? "";
-        //        record.BookingDate = dto.BookingCommence?.Date;
-        //        record.BookingFromTime = dto.BookingCommence;
-        //        record.BookingToTime = dto.BookingExpiry;
-        //        record.AddDt = DateTime.Now;
-        //    }
-        //    int rowsAffected = await _context.SaveChangesAsync();
+        ////    var record = await _context.VisitRecords.Where(v => v.HomeId == dto.Booking_id).FirstOrDefaultAsync();
+        ////    if (record != null)
+        ////    {
+        ////        record.Interviewer = dto.ResidentCardId ?? "";
+        ////        record.BookingDate = dto.BookingCommence?.Date;
+        ////        record.BookingFromTime = dto.BookingCommence;
+        ////        record.BookingToTime = dto.BookingExpiry;
+        ////        record.AddDt = DateTime.Now;
+        ////    }
+        ////    int rowsAffected = await _context.SaveChangesAsync();
 
-        //    ResponseVisitorRecordCreate response = new ResponseVisitorRecordCreate
-        //    {
-        //        Booking_id = dto.Booking_id
-        //    };
+        ////    ResponseVisitorRecordCreate response = new ResponseVisitorRecordCreate
+        ////    {
+        ////        Booking_id = dto.Booking_id
+        ////    };
 
-        //    if (rowsAffected > 0)
-        //        return Ok(ApiResponse<ResponseVisitorRecordCreate>.Success(response));
-        //    else
-        //        return Ok(ApiResponse<object>.Error(-1, "Update Failed"));
+        ////    if (rowsAffected > 0)
+        ////        return Ok(ApiResponse<ResponseVisitorRecordCreate>.Success(response));
+        ////    else
+        ////        return Ok(ApiResponse<object>.Error(-1, "Update Failed"));
 
-        //}
+        ////}
 
         // POST: api/VisitRecords/Update → Update existing record
         [HttpPost("BulkUpdate")]
@@ -372,7 +372,7 @@ namespace dotnet9_TestAPI.Controllers
             return rowsAffected > 0;
         }
 
-        public async Task<List<AccessEventRecordsAction>> GetRecentAccessEventsAsync(int pageNumber = 1, int pageSize = 50, string? deviceId = null)
+        private async Task<List<AccessEventRecordsAction>> GetRecentAccessEventsAsync(int pageNumber = 1, int pageSize = 50, string? deviceId = null)
         {
             DateTime startTime = DateTime.Now.AddYears(-5);
             DateTime endTime = DateTime.Now;

@@ -31,22 +31,12 @@ namespace dotnet9_TestAPI.Controllers
             _context = context;
         }
 
-        //private static List<User> users = new List<User>
-        //{
-        //    new User { Username = "admin", Password = "password" }
-        //};
-
         public class ResponseTokenParam
         {
             public string? Token { get; set; }
             public int Expiry { get; set; }
         }
 
-        //public class ResponseTokenParam
-        //{
-        //    public string? token { get; set; }
-        //    public int expiry { get; set; }
-        //}
 
         // ===================================================
         // 1. STANDARD REGISTRATION HANDLER
@@ -179,77 +169,6 @@ namespace dotnet9_TestAPI.Controllers
             return Ok(ApiResponse<ResponseTokenParam>.Success(response));
         }
 
-        //[HttpPost]
-        //[Route("Loginv2")]
-        //public async Task<ActionResult<ApiResponse<ResponseTokenParam>>> Loginv2([FromBody] UserDto dto)
-        //{
-        //    if (dto == null)
-        //        return Ok(ApiResponse<object>.Error(-1, "Invalid input parameters."));
-
-        //    // Retrieving headers
-        //    var timestampHeader = Request.Headers["timestamp"].ToString();
-        //    var nonceHeader = Request.Headers["nonce"].ToString();
-
-        //    // Validate headers
-        //    if (string.IsNullOrEmpty(timestampHeader) || string.IsNullOrEmpty(nonceHeader))
-        //        return Ok(ApiResponse<object>.Error(-1, "Missing timestamp or nonce in headers."));
-
-        //    //find the password in DB based on the user_id
-        //    var password = await _context.Users.Where(v => v.UserName == dto.user_id).Select(v => v.Password.ToString()).FirstOrDefaultAsync();
-        //    if(password == null)
-        //        return Ok(ApiResponse<object>.Error(-1, "User does not exist."));
-
-        //    var dataToHash = dto.user_id + nonceHeader + timestampHeader;
-        //    string hash_pwd = HMACSHA256Encrypt(password, dataToHash, Encoding.UTF8);
-
-        //    if (hash_pwd != dto.password)
-        //        return Ok(ApiResponse<object>.Error(-1, "Invalid username or password."));
-
-        //    string token = CreateToken(dto);
-
-        //    ResponseTokenParam response = new ResponseTokenParam();
-        //    response.token = token;
-        //    response.expiry = 120; // 2 hours in minutes
-
-        //    return Ok(ApiResponse<ResponseTokenParam>.Success(response));
-        //}
-
-        //[HttpPost]
-        //[Route("Login")]
-        //public ActionResult<ResponseEntity> Login(UserDto loginUser)
-        //{
-        //    // Retrieving headers
-        //    var timestampHeader = Request.Headers["timestamp"].ToString();
-        //    var nonceHeader = Request.Headers["nonce"].ToString();
-
-        //    // Validate headers
-        //    if (string.IsNullOrEmpty(timestampHeader) || string.IsNullOrEmpty(nonceHeader))           
-        //        return BadRequest("Missing timestamp or nonce in headers.");
-
-        //    if (loginUser is null)
-        //        return BadRequest("Invalid input parameters.");
-
-        //    //password in DB
-        //    var password = users.FirstOrDefault(u => u.Username == loginUser.user_id)?.Password;
-
-        //    var dataToHash = loginUser.user_id + nonceHeader + timestampHeader;
-        //    string hash_pwd = HMACSHA256Encrypt(password, dataToHash, Encoding.UTF8);
-
-        //    if (hash_pwd != loginUser.password)
-        //        return Unauthorized("Invalid username or password.");
-
-        //    string token = CreateToken(loginUser);
-
-        //    ResponseTokenParam response = new ResponseTokenParam();
-        //    response.token = token;
-        //    response.expiry = 120; // 2 hours in minutes
-
-        //    ResponseEntity ret = new ResponseEntity();
-        //    ret.Success(response);
-
-        //    return Ok(ret);
-        //}
-
         // ==================== NEW: GOOGLE LOGIN ====================
 
         [HttpGet("google")]
@@ -273,51 +192,6 @@ namespace dotnet9_TestAPI.Controllers
 
             return Challenge(properties, GoogleDefaults.AuthenticationScheme);
         }
-
-        //[HttpGet("google-callback")]
-        //[HttpGet("google-success")]
-        //public async Task<IActionResult> GoogleCallback()
-        //{
-        //    try
-        //    {
-        //        var result = await HttpContext.AuthenticateAsync(GoogleDefaults.AuthenticationScheme);
-
-        //        if (result?.Succeeded != true || result.Principal == null)
-        //            return BadRequest(new { message = "Google authentication failed." });
-
-        //        var email = result.Principal.FindFirst(ClaimTypes.Email)?.Value;
-        //        var name = result.Principal.FindFirst(ClaimTypes.Name)?.Value;
-        //        var picture = result.Principal.FindFirst("picture")?.Value;
-
-        //        if (string.IsNullOrEmpty(email))
-        //            return BadRequest(new { message = "Failed to get email from Google." });
-
-        //        // Reuse your existing CreateToken method
-        //        var userDto = new UserDto { user_id = email };
-        //        string token = CreateToken(userDto);
-
-        //        // Check if the request came from a local environment context or default to production
-        //        //var referer = Request.Headers["Referer"].ToString();
-        //        //if (!string.IsNullOrEmpty(referer) && referer.Contains("localhost:5173"))
-        //        //{
-        //        //    // Bounces back to your local development server
-        //        //    return Redirect($"http://localhost:5173/?token={token}");
-        //        //}
-
-        //        // Fallback default redirect to production frontend
-        //        return Redirect($"https://488865.xyz/?token={token}");
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        // 🔥 This will catch the crash and show the real error details on your webpage!
-        //        return StatusCode(500, new
-        //        {
-        //            message = "An error occurred inside GoogleCallback",
-        //            errorDetails = ex.Message,
-        //            stackTrace = ex.StackTrace
-        //        });
-        //    }
-        //}
 
         // ===================================================
         // 4. REVISED GOOGLE SUCCESS PROCESSING SUITE

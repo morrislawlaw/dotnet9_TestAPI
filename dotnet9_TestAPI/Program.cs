@@ -26,7 +26,8 @@ builder.Services.AddDbContext<HotelBookingSystemDbContext>(options =>
 
 // ===== Services =====
 builder.Services.AddScoped<BookingService>();
-builder.Services.AddHttpClient<EmailService>();
+//builder.Services.AddHttpClient<EmailService>();
+builder.Services.AddHttpClient<IEmailService, EmailService>();
 
 // ===== CORS Policy (Production Ready) =====
 builder.Services.AddCors(options =>
@@ -57,15 +58,26 @@ builder.Services.AddControllers()
 
 // ===== OpenAPI / Scalar =====
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddOpenApi("v2", options =>
-{
-    options.AddDocumentTransformer<BearerSecuritySchemeTransformer>();
-    options.AddDocumentTransformer((document, context, ct) =>
-    {
-        document.Info.Title = "Hotel Booking API v2";
-        return Task.CompletedTask;
-    });
-});
+builder.Services.AddOpenApi();
+//builder.Services.AddOpenApi(options =>
+//{
+//    options.AddDocumentTransformer<BearerSecuritySchemeTransformer>();
+//    options.AddDocumentTransformer((document, context, ct) =>
+//    {
+//        document.Info.Title = "Hotel Booking API v2";
+//        return Task.CompletedTask;
+//    });
+//});
+
+//builder.Services.AddOpenApi(options =>
+//{
+//    options.AddDocumentTransformer<BearerSecuritySchemeTransformer>();
+//    options.AddDocumentTransformer((document, context, ct) =>
+//    {
+//        document.Info.Title = "Hotel Booking API v2";
+//        return Task.CompletedTask;
+//    });
+//});
 
 // ===== JWT Authentication =====
 var jwtSettings = builder.Configuration.GetSection("Jwt");
@@ -126,16 +138,7 @@ builder.Services.AddAuthorization();
 
 var app = builder.Build();
 
-// ===== Middleware Pipeline (CRITICAL ORDER) =====
-if (app.Environment.IsDevelopment() || app.Environment.IsProduction())
-{
-    app.MapOpenApi();
-    app.MapScalarApiReference(options =>
-    {
-        options.WithEndpointPrefix("/scalar/v2");
-        options.WithOpenApiRoutePattern("/openapi/v2.json");
-    });
-}
+
 
 app.UseHttpsRedirection();
 
@@ -149,4 +152,18 @@ app.UseAuthorization();
 
 app.MapControllers();
 
+// ===== Middleware Pipeline (CRITICAL ORDER) =====
+if (app.Environment.IsDevelopment() || app.Environment.IsProduction())
+{
+    //app.MapOpenApi();
+    //app.MapScalarApiReference(options =>
+    //{
+    //    options.WithEndpointPrefix("/scalar/v2");
+    //    options.WithOpenApiRoutePattern("/openapi/v2.json");
+    //});
+
+
+    app.MapOpenApi();
+    app.MapScalarApiReference();
+}
 app.Run();
