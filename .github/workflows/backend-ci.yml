@@ -1,0 +1,29 @@
+name: Backend CI Pipeline
+
+on:
+  push:
+    branches: [ main, master, develop ]
+  pull_request:
+    branches: [ main, master, develop ]
+
+jobs:
+  backend-unit-tests:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout API Repository
+        uses: actions/checkout@v4
+
+      - name: Setup .NET Core SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x'
+
+      - name: Restore Dependencies
+        run: dotnet restore
+
+      - name: Build Solution
+        run: dotnet build --no-restore --configuration Release
+
+      - name: Run xUnit Tests
+        run: dotnet test --no-build --configuration Release --verbosity normal
