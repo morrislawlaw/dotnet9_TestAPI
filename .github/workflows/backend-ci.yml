@@ -22,8 +22,5 @@ jobs:
       - name: Restore Dependencies
         run: dotnet restore
 
-      - name: Build Solution
-        run: dotnet build --no-restore --configuration Release
-
       - name: Run xUnit Tests
-        run: dotnet test --no-build --configuration Release --verbosity normal
+        run: dotnet test --configuration Release --verbosity normal
